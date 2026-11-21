@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Spawns chunk prefabs above the player and destroys them once they fall
-// far enough below. Owns the lifecycle of every chunk it places, including
-// the pre-placed starting chunks.
 public class WorldGenerator : MonoBehaviour
 {
     [Header("References")]
@@ -11,7 +8,7 @@ public class WorldGenerator : MonoBehaviour
     [SerializeField] GameObject[] chunkPrefabs;
 
     [Header("Spawning")]
-    [SerializeField] float chunkHeight = 12f; 
+    [SerializeField] float chunkHeight = 12f;
     [SerializeField] float spawnAheadDistance = 24f;
     [SerializeField] float despawnDistance = 24f;
 
@@ -25,6 +22,14 @@ public class WorldGenerator : MonoBehaviour
     [Tooltip("Width of the kill zone that trails below the lowest loaded chunk.")]
     [SerializeField] float killZoneWidth = 50f;
 
+    [Header("Coins")]
+    [SerializeField] GameObject coinPrefab;
+    [Range(0f, 1f)]
+    [SerializeField] float coinChance = 0.7f;
+    [Tooltip("Coins spawn between these x positions (inside the shaft).")]
+    [SerializeField] float coinMinX = -2f;
+    [SerializeField] float coinMaxX = 2f;
+
     float nextSpawnY;
     Transform killZone;
     readonly List<GameObject> spawnedChunks = new List<GameObject>();
@@ -36,9 +41,6 @@ public class WorldGenerator : MonoBehaviour
         killZone = CreateKillZone();
     }
 
-    // A trigger that starts below the starting chunks and, as chunks despawn,
-    // slides up to take the place of the last one destroyed - so falling
-    // below the currently loaded chunks always means falling into it.
     Transform CreateKillZone()
     {
         GameObject killZoneObject = new GameObject("KillZone");
@@ -63,19 +65,38 @@ public class WorldGenerator : MonoBehaviour
         DespawnChunksBelowPlayer();
     }
 
-    // Instantiate a random chunk above the player.
     void Spawn()
     {
         GameObject prefab = chunkPrefabs[Random.Range(0, chunkPrefabs.Length)];
         GameObject chunk = Instantiate(prefab, new Vector3(0f, nextSpawnY, 0f), Quaternion.identity);
-        // Parent all chunks to this object, to keep the hierarchy clean.
         chunk.transform.SetParent(transform);
         spawnedChunks.Add(chunk);
+
+        TrySpawnCoin(chunk);
 
         nextSpawnY += chunkHeight;
     }
 
-    // Despawn chunks if their distance to the player is > despawn distance.
+    void TrySpawnCoin(GameObject chunk)
+    {
+        if (coinPrefab == null || Random.value > coinChance) return;
+
+        Physics2D.SyncTransforms();
+
+        for (int attempt = 0; attempt < 10; attempt++)
+        {
+            Vector2 position = new Vector2(
+                Random.Range(coinMinX, coinMaxX),
+                chunk.transform.position.y + Random.Range(-chunkHeight / 2f, chunkHeight / 2f));
+
+            if (Physics2D.OverlapCircle(position, 0.5f) == null)
+            {
+                Instantiate(coinPrefab, position, Quaternion.identity, chunk.transform);
+                return;
+            }
+        }
+    }
+
     void DespawnChunksBelowPlayer()
     {
         for (int i = spawnedChunks.Count - 1; i >= 0; i--)

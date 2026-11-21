@@ -2,10 +2,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// Tracks the game state, score and highscore, and handles
+// Tracks the game state, score, coins and highscore, and handles
 // Game Over, Pause, Restart and going back to the menu.
 public class GameManager : MonoBehaviour
 {
+    // Singleton: other scripts can reach the GameManager via GameManager.Instance
+    public static GameManager Instance { get; private set; }
+
     enum GameState { Playing, GameOver }
 
     const string HighscoreKey = "Highscore";
@@ -25,14 +28,26 @@ public class GameManager : MonoBehaviour
     GameState gameState;
     float score;
     int highscore;
+    int coins;
     bool isPaused;
 
     public bool IsGameOver => gameState == GameState.GameOver;
     public bool IsPaused => isPaused;
 
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
     void Start()
     {
         score = 0f;
+        coins = 0;
         gameState = GameState.Playing;
         isPaused = false;
         Time.timeScale = 1f;
@@ -60,7 +75,7 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
 
-    // Called by the Escape key and the "Resume" button
+    // Called by the Escape/P key, the pause button and the "Resume" button
     public void TogglePause()
     {
         isPaused = !isPaused;
@@ -68,6 +83,16 @@ public class GameManager : MonoBehaviour
 
         // timeScale 0 freezes physics and everything that uses Time.deltaTime
         Time.timeScale = isPaused ? 0f : 1f;
+    }
+
+    // Called by a coin when the player collects it
+    public void AddCoin(int value)
+    {
+        if (gameState != GameState.Playing) return;
+
+        coins++;
+        score += value;
+        UpdateUI();
     }
 
     public void OnPlayerCollidedWithObstacle()
@@ -82,11 +107,11 @@ public class GameManager : MonoBehaviour
             highscore = finalScore;
             PlayerPrefs.SetInt(HighscoreKey, highscore);
             PlayerPrefs.Save();
-            finalScoreText.text = $"NEW HIGHSCORE: {finalScore}!";
+            finalScoreText.text = $"NEW HIGHSCORE: {finalScore}!\nCoins: {coins}";
         }
         else
         {
-            finalScoreText.text = $"Score: {finalScore}\nBest: {highscore}";
+            finalScoreText.text = $"Score: {finalScore}\nBest: {highscore}\nCoins: {coins}";
         }
 
         UpdateUI();
@@ -100,7 +125,7 @@ public class GameManager : MonoBehaviour
 
     void UpdateUI()
     {
-        scoreText.text = $"Score: {Mathf.FloorToInt(score)}";
+        scoreText.text = $"Score: {Mathf.FloorToInt(score)}   Coins: {coins}";
         highscoreText.text = $"Best: {highscore}";
     }
 

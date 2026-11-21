@@ -2706,7 +2706,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -60}
-  m_SizeDelta: {x: 600, y: 80}
+  m_SizeDelta: {x: 1200, y: 80}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1986148481
 MonoBehaviour:
@@ -2772,7 +2772,7 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
+  m_TextWrappingMode: 0
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
@@ -3150,6 +3150,10 @@ MonoBehaviour:
   - {fileID: 2063337869}
   firstChunkOffset: 12
   killZoneWidth: 50
+  coinPrefab: {fileID: 7964551582070468985, guid: 37a636b4332f74b3a8e61e195d9d5896, type: 3}
+  coinChance: 0.7
+  coinMinX: -2
+  coinMaxX: 2
 --- !u!4 &2086854036
 Transform:
   m_ObjectHideFlags: 0
