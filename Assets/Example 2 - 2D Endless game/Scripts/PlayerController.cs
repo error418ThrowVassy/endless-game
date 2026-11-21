@@ -35,7 +35,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (gameManager.IsGameOver) return;
+        if (gameManager.IsGameOver || gameManager.IsPaused) return;
 
         // We check against wallStickVelocityTolerance, as right after a jump the wall is still be within raycast range for a
         // few frames, however we dont want the player to be grounded right after jumping.

@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Example 2 - 2D Endless game/Scenes/MainMenu.unity
+    guid: 18c3a0e6342d7471f905d4bedf78c640
+  - enabled: 1
     path: Assets/Example 2 - 2D Endless game/Scenes/Main Scene.unity
     guid: fcacf7f0e16ecfc49b9530f803ecb17f
   - enabled: 0
