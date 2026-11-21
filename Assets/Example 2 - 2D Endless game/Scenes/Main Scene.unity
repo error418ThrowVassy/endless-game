@@ -1327,6 +1327,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   wallStickVelocityTolerance: 0.5
+  deathEffect: {fileID: 1074231328749700475, guid: 65d9ef6486b7c4450a74302f1e7f9b59, type: 3}
 --- !u!50 &847670966
 Rigidbody2D:
   serializedVersion: 5

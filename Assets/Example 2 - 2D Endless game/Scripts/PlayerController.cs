@@ -1,9 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
-// Falls under normal gravity and climbs by wall-jumping left/right (with
-// reduced gravity while clinging to a wall), reporting obstacle collisions
-// to the GameManager.
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
@@ -24,8 +20,12 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Tolerance for the 'moving away from wall' velocity check, to absorb tiny residual velocities the physics solver leaves after resolving a wall collision.")]
     [SerializeField] float wallStickVelocityTolerance = 0.5f;
 
-    int jumpsRemaining; // resets to maxJumps when clinging to a wall
+    [Header("Effects")]
+    [SerializeField] GameObject deathEffect;
+
+    int jumpsRemaining;
     bool wasGroundedLastFrame;
+    bool isDead;
 
     void Start()
     {
@@ -37,17 +37,13 @@ public class PlayerController : MonoBehaviour
     {
         if (gameManager.IsGameOver || gameManager.IsPaused) return;
 
-        // We check against wallStickVelocityTolerance, as right after a jump the wall is still be within raycast range for a
-        // few frames, however we dont want the player to be grounded right after jumping.
         bool clingingLeft = IsGrounded(Vector2.left) && rb.linearVelocity.x <= wallStickVelocityTolerance;
         bool clingingRight = IsGrounded(Vector2.right) && rb.linearVelocity.x >= -wallStickVelocityTolerance;
 
-        // Reset the jump counter and limit gravity when clinging to a wall.
         if (clingingLeft || clingingRight)
         {
             rb.gravityScale = wallClingGravityScale;
 
-            // Only reset the velocity and max jump when we started clinign to a wall.
             if (!wasGroundedLastFrame)
             {
                 jumpsRemaining = maxJumps;
@@ -61,15 +57,13 @@ public class PlayerController : MonoBehaviour
             wasGroundedLastFrame = false;
         }
 
-        if ( !clingingLeft && Input.GetMouseButtonDown(0) && jumpsRemaining > 0)
+        if (!clingingLeft && Input.GetMouseButtonDown(0) && jumpsRemaining > 0)
         {
-            // Left jump: kick up and to the left, off a wall on the right.
             rb.linearVelocity = new Vector2(-jumpForceSide, jumpForceUp);
             jumpsRemaining--;
         }
         else if (!clingingRight && Input.GetMouseButtonDown(1) && jumpsRemaining > 0)
         {
-            // Right jump: kick up and to the right, off a wall on the left.
             rb.linearVelocity = new Vector2(jumpForceSide, jumpForceUp);
             jumpsRemaining--;
         }
@@ -89,17 +83,22 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // Called by KillZone (a trigger collider) when the player falls into it.
     public void Die()
     {
+        if (isDead) return;
+        isDead = true;
+
+        if (deathEffect != null)
+        {
+            Instantiate(deathEffect, transform.position, Quaternion.identity);
+        }
+
         rb.gravityScale = defaultGravityScale;
-        // add a small rotation force to show loss of control
         rb.freezeRotation = false;
         rb.AddTorque(25f);
         gameManager.OnPlayerCollidedWithObstacle();
     }
 
-    // Displays the grounded raycasts for debug purposes
     void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
