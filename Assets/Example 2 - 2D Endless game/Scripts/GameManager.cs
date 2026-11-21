@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 // Tracks whether the game is playing or over, increases score over time,
-// shows score + highscore on screen and saves the highscore with PlayerPrefs.
+// shows score + highscore, saves the highscore and shows a Game Over screen.
 public class GameManager : MonoBehaviour
 {
     enum GameState { Playing, GameOver }
@@ -12,11 +12,14 @@ public class GameManager : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] float scorePerSecond = 1f;
-    [SerializeField] float restartDelay = 2f;
+    [Tooltip("Delay before the Game Over screen appears, so the death animation is visible.")]
+    [SerializeField] float gameOverDelay = 1f;
 
     [Header("UI")]
     [SerializeField] TMP_Text scoreText;
     [SerializeField] TMP_Text highscoreText;
+    [SerializeField] GameObject gameOverPanel;
+    [SerializeField] TMP_Text finalScoreText;
 
     GameState gameState;
     float score;
@@ -28,6 +31,7 @@ public class GameManager : MonoBehaviour
     {
         score = 0f;
         gameState = GameState.Playing;
+        gameOverPanel.SetActive(false);
 
         // Load the saved highscore (0 if none exists yet)
         highscore = PlayerPrefs.GetInt(HighscoreKey, 0);
@@ -49,17 +53,25 @@ public class GameManager : MonoBehaviour
         gameState = GameState.GameOver;
         int finalScore = Mathf.FloorToInt(score);
 
-        // Save a new highscore
         if (finalScore > highscore)
         {
             highscore = finalScore;
             PlayerPrefs.SetInt(HighscoreKey, highscore);
             PlayerPrefs.Save();
-            highscoreText.text = $"NEW BEST: {highscore}!";
+            finalScoreText.text = $"NEW HIGHSCORE: {finalScore}!";
+        }
+        else
+        {
+            finalScoreText.text = $"Score: {finalScore}\nBest: {highscore}";
         }
 
-        Debug.Log($"Game Over. Score: {finalScore}");
-        Invoke(nameof(Restart), restartDelay);
+        UpdateUI();
+        Invoke(nameof(ShowGameOver), gameOverDelay);
+    }
+
+    void ShowGameOver()
+    {
+        gameOverPanel.SetActive(true);
     }
 
     void UpdateUI()
@@ -68,7 +80,8 @@ public class GameManager : MonoBehaviour
         highscoreText.text = $"Best: {highscore}";
     }
 
-    void Restart()
+    // Called by the "Play Again" button
+    public void Restart()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
