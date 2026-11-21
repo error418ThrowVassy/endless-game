@@ -15,6 +15,7 @@ public class Coin : MonoBehaviour
         if (other.GetComponent<PlayerController>() == null) return;
 
         GameManager.Instance.AddCoin(value);
+        AudioManager.PlayCoin();
         Destroy(gameObject);
     }
 }
